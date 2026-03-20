@@ -20,7 +20,7 @@ Not sure about something? Start a thread in [GitHub Discussions](https://github.
 
 ## Development Setup
 
-See the [README](README.md) for one-command local setup using `make setup` and Docker Compose.
+See the [Quick Start Guide](docs/QUICK-START.md) for one-command local setup using `make setup` and Docker Compose.
 
 ## Making Changes
 

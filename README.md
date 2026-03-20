@@ -1,107 +1,112 @@
-# EVO AI Community
+<!-- TODO: Add banner image -->
 
-> Open-source, single-tenant AI-powered customer support platform.
+# Evo AI Community
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+> Open-source, self-hosted AI-powered CRM platform for multi-channel customer engagement.
 
-EVO AI Community is the open-source edition of the EVO AI platform — a complete suite for AI-assisted customer support. It brings together authentication, CRM, AI agents, agent processing and a modern frontend into a unified, self-hostable stack.
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/EvolutionAPI/evo-crm-community)](https://github.com/EvolutionAPI/evo-crm-community/releases)
+[![Docker Image](https://img.shields.io/badge/Docker-ghcr.io-blue)](https://github.com/EvolutionAPI/evo-crm-community/pkgs/container/evo-crm-community)
+[![GitHub stars](https://img.shields.io/github/stars/EvolutionAPI/evo-crm-community)](https://github.com/EvolutionAPI/evo-crm-community/stargazers)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-This repository is the **monorepo entrypoint**: it aggregates all community services as Git submodules, giving you a single place to clone, update and orchestrate the entire platform.
+## What is Evo AI Community?
 
----
+Evo AI Community is the open-source edition of the Evo AI platform — a complete suite for AI-assisted customer support and CRM. It brings together authentication, CRM, AI agents, message processing, and a modern web frontend into a unified, self-hostable stack. Deploy it on your own infrastructure and own your data.
+
+## Key Features
+
+- **Multi-channel messaging** — WhatsApp, Telegram, Facebook, and more
+- **AI-powered agents** — Automated conversations with LLM-based agents
+- **CRM pipeline management** — Contacts, conversations, and inboxes
+- **Real-time conversations** — WebSocket-powered live messaging
+- **Multi-language support** — Serve customers in any language
+- **Self-hosted & open source** — Full control, no vendor lock-in
 
 ## Architecture
 
-The platform is composed of 5 independent services:
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Frontend (React/Vite)                     │
+│                      localhost:5173                          │
+└──────┬──────────┬──────────────┬───────────────┬────────────┘
+       │          │              │               │
+       ▼          ▼              ▼               ▼
+┌──────────┐ ┌─────────┐ ┌────────────┐ ┌─────────────┐
+│   Auth   │ │   CRM   │ │    Core    │ │  Processor  │
+│  :3001   │ │  :3000  │ │   :5555   │ │    :8000    │
+│ Ruby/    │ │ Ruby/   │ │  Go/Gin   │ │  Python/    │
+│ Rails    │ │ Rails   │ │           │ │  FastAPI    │
+└────┬─────┘ └────┬────┘ └─────┬─────┘ └──────┬──────┘
+     │            │            │               │
+     └────────────┴────────────┴───────────────┘
+                       │
+          ┌────────────┴────────────┐
+          │  PostgreSQL (pgvector)  │
+          │        + Redis         │
+          └────────────────────────┘
+```
 
-| Service                                                            | Role                                         | Stack                     | Default Port |
-| ------------------------------------------------------------------ | -------------------------------------------- | ------------------------- | ------------ |
-| [`evo-auth-service-community`](./evo-auth-service-community)       | Authentication, RBAC, OAuth2, token issuance | Ruby 3.4 / Rails 7.1      | `3001`       |
-| [`evo-ai-crm-community`](./evo-ai-crm-community)                   | Conversations, contacts, inboxes, messaging  | Ruby 3.4 / Rails 7.1      | `3000`       |
-| [`evo-ai-frontend-community`](./evo-ai-frontend-community)         | Web interface                                | React / TypeScript / Vite | `5173`       |
-| [`evo-ai-processor-community`](./evo-ai-processor-community)       | AI agent execution, sessions, tools, MCP     | Python 3.10 / FastAPI     | `8000`       |
-| [`evo-ai-core-service-community`](./evo-ai-core-service-community) | Agent management, API keys, folders          | Go / Gin                  | `5555`       |
-
-### Design principles (Community Edition)
-
-- **Single-tenant** — one account, no multi-tenancy overhead
-- **No super-admin** — all configuration via seed data and environment variables
-- **No billing / plans** — all limits removed, features unlocked by default
-- **Role hierarchy**: `account_owner` and `agent` — no intermediate roles
-- **Account resolution** via token — no `account-id` header required between services
-
----
-
-## Getting started
-
-### Prerequisites
-
-- Docker & Docker Compose
-- Git with submodule support
-
-### 1. Clone with submodules
+## Quick Start
 
 ```bash
-git clone --recurse-submodules git@github.com:EvolutionAPI/evo-crm-community.git
+# 1. Clone the repository
+git clone --recurse-submodules https://github.com/EvolutionAPI/evo-crm-community.git
 cd evo-crm-community
+
+# 2. Configure environment
+cp .env.example .env
+
+# 3. Start services
+docker compose up -d
+
+# 4. Seed databases (~2 minutes)
+make seed
+
+# 5. Open http://localhost:5173 and login
 ```
 
-If you already cloned without submodules:
+> **First run takes ~5 minutes** (Docker image builds + database seeding).
 
-```bash
-git submodule update --init --recursive
-```
+For detailed step-by-step instructions, see the [Quick Start Guide](docs/QUICK-START.md).
 
-### 2. Update all submodules to latest
+### Default Credentials
 
-```bash
-git submodule update --remote --merge
-```
+| Field    | Value                                     |
+|----------|-------------------------------------------|
+| Email    | `support@evo-auth-service-community.com`  |
+| Password | `Password@123`                            |
 
-### 3. Setup each service
+### Service URLs
 
-Refer to each service's own README for environment configuration, setup and seed instructions:
+| Service      | URL                      |
+|--------------|--------------------------|
+| Frontend     | http://localhost:5173    |
+| CRM API      | http://localhost:3000    |
+| Auth Service | http://localhost:3001    |
+| Processor    | http://localhost:8000    |
+| Core Service | http://localhost:5555    |
+| Mailhog      | http://localhost:8025    |
 
-- [evo-auth-service-community →](https://github.com/EvolutionAPI/evo-auth-service-community#readme)
-- [evo-ai-crm-community →](https://github.com/EvolutionAPI/evo-ai-crm-community#readme)
-- [evo-ai-frontend-community →](https://github.com/EvolutionAPI/evo-ai-frontend-community#readme)
-- [evo-ai-processor-community →](https://github.com/EvolutionAPI/evo-ai-processor-community#readme)
-- [evo-ai-core-service-community →](https://github.com/EvolutionAPI/evo-ai-core-service-community#readme)
+## Documentation
 
-> **Note:** `evo-auth-service-community` must be seeded before `evo-ai-crm-community` — the CRM depends on the user created by the auth seed.
+- [Quick Start Guide](docs/QUICK-START.md) — Get running in 5 minutes
+- [Setup Guide](docs/SETUP-GUIDE.md) — Detailed configuration and customization
+- [Troubleshooting](docs/TROUBLESHOOTING.md) — Common issues and solutions
+- [Contributing](CONTRIBUTING.md) — How to contribute
+- [Changelog](CHANGELOG.md) — Release history
 
----
+## Community
 
-## Service dependencies
-
-```
-evo-ai-frontend-community
-    └── evo-auth-service-community  (authentication)
-    └── evo-ai-crm-community        (conversations, contacts)
-    └── evo-ai-core-service-community (agents, tools, API keys)
-    └── evo-ai-processor-community  (agent execution, sessions)
-```
-
-All inter-service communication uses Bearer token authentication. The token issued by `evo-auth-service-community` is forwarded between services — no additional headers required.
-
----
-
-## Submodules reference
-
-| Submodule                       | Repository                                                                                                  |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `evo-auth-service-community`    | [EvolutionAPI/evo-auth-service-community](https://github.com/EvolutionAPI/evo-auth-service-community)       |
-| `evo-ai-crm-community`          | [EvolutionAPI/evo-ai-crm-community](https://github.com/EvolutionAPI/evo-ai-crm-community)                   |
-| `evo-ai-frontend-community`     | [EvolutionAPI/evo-ai-frontend-community](https://github.com/EvolutionAPI/evo-ai-frontend-community)         |
-| `evo-ai-processor-community`    | [EvolutionAPI/evo-ai-processor-community](https://github.com/EvolutionAPI/evo-ai-processor-community)       |
-| `evo-ai-core-service-community` | [EvolutionAPI/evo-ai-core-service-community](https://github.com/EvolutionAPI/evo-ai-core-service-community) |
-
----
-
-## Contributing
-
-Contributions are welcome. Please open an issue or pull request in the relevant submodule repository.
+- **Bug reports** — [Open an issue](https://github.com/EvolutionAPI/evo-crm-community/issues/new?template=bug_report.yml)
+- **Feature requests** — [Request a feature](https://github.com/EvolutionAPI/evo-crm-community/issues/new?template=feature_request.yml)
+- **Questions & discussions** — [GitHub Discussions](https://github.com/EvolutionAPI/evo-crm-community/discussions)
+- **Contributing** — Read our [Contributing Guide](CONTRIBUTING.md)
 
 ## License
 
-MIT — [LICENSE](./LICENSE) for details.
+This project is licensed under the [Apache License 2.0](LICENSE).
+
+## Trademarks
+
+"Evo AI" and associated logos are trademarks of Evo AI. See [TRADEMARKS.md](TRADEMARKS.md) for usage guidelines.
