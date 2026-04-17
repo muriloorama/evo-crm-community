@@ -13,7 +13,7 @@ GREEN := \033[32m
 RESET := \033[0m
 
 .PHONY: help setup start stop restart logs clean build status \
-        seed seed-auth seed-crm free-ports \
+        seed seed-auth seed-crm \
         shell-auth shell-crm shell-core shell-processor shell-bot-runtime
 
 ## —— General ——————————————————————————————————————————————————————————————————
@@ -64,32 +64,15 @@ setup: ## First-time setup: copy env, build, start, seed
 	@echo "  Pass:   Password@123"
 	@echo ""
 
-start: free-ports ## Start all services (frees conflicting ports first)
+start: ## Start all services
 	docker compose up -d
 
 stop: ## Stop all services
 	docker compose down
 
-restart: free-ports ## Restart all services (frees conflicting ports first)
+restart: ## Restart all services
 	docker compose down
 	docker compose up -d
-
-free-ports: ## Stop any docker containers from other stacks holding our published ports
-	@project=$$(docker compose config 2>/dev/null | awk '/^name:/ {print $$2; exit}'); \
-	ports=$$(docker compose config 2>/dev/null | awk '/^[[:space:]]+published:/ {gsub(/"/,"",$$2); print $$2}' | sort -u); \
-	freed=0; \
-	for port in $$ports; do \
-	  for cid in $$(docker ps --filter "publish=$$port" -q 2>/dev/null); do \
-	    cproj=$$(docker inspect -f '{{ index .Config.Labels "com.docker.compose.project" }}' $$cid 2>/dev/null); \
-	    if [ "$$cproj" != "$$project" ]; then \
-	      name=$$(docker inspect -f '{{.Name}}' $$cid 2>/dev/null | sed 's|^/||'); \
-	      echo "  stopping $$name (port $$port, project=$${cproj:-<none>})"; \
-	      docker stop $$cid >/dev/null; \
-	      freed=$$((freed + 1)); \
-	    fi; \
-	  done; \
-	done; \
-	if [ $$freed -gt 0 ]; then echo "$(GREEN)Freed $$freed container(s).$(RESET)"; fi
 
 build: ## Rebuild all service images (no cache)
 	docker compose build --no-cache
