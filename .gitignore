@@ -1,2 +1,17 @@
 .env
+.env.local
+.env.*.local
 _evo*
+
+# Runtime artifacts
+.claude/scheduled_tasks.lock
+.claude/projects/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Node (parent-level lockfile produced by npm scripts)
+node_modules/
+package-lock.json

@@ -1,0 +1,78 @@
+services:
+  # ---------------------------------------------------------------------------
+  # One-shot: garante que o database `evolution_api` exista no postgres compartilhado.
+  # ---------------------------------------------------------------------------
+  evolution-api-db-init:
+    image: postgres:16-alpine
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-evoai_dev_password}
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        psql -h postgres -U ${POSTGRES_USERNAME:-postgres} -tc "SELECT 1 FROM pg_database WHERE datname='evolution_api'" | grep -q 1 \
+          || psql -h postgres -U ${POSTGRES_USERNAME:-postgres} -c "CREATE DATABASE evolution_api"
+
+  # ---------------------------------------------------------------------------
+  # Evolution API (Node.js / Baileys + WhatsApp Cloud API) — Port 8080
+  # ---------------------------------------------------------------------------
+  evolution-api:
+    image: evoapicloud/evolution-api:latest
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      SERVER_TYPE: http
+      SERVER_PORT: 8080
+      SERVER_URL: https://wpp.atendai.pro
+      CORS_ORIGIN: "*"
+      CORS_METHODS: "GET,POST,PUT,DELETE"
+      CORS_CREDENTIALS: "true"
+      LOG_LEVEL: "ERROR,WARN,INFO,LOG"
+      LOG_COLOR: "true"
+      LOG_BAILEYS: "error"
+      LANGUAGE: pt-BR
+      DEL_INSTANCE: "false"
+      DEL_TEMP_INSTANCES: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://${POSTGRES_USERNAME:-postgres}:${POSTGRES_PASSWORD:-evoai_dev_password}@postgres:5432/evolution_api
+      DATABASE_CONNECTION_CLIENT_NAME: evolution
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "true"
+      DATABASE_SAVE_MESSAGE_UPDATE: "true"
+      DATABASE_SAVE_DATA_CONTACTS: "true"
+      DATABASE_SAVE_DATA_CHATS: "true"
+      DATABASE_SAVE_DATA_HISTORIC: "true"
+      DATABASE_SAVE_DATA_LABELS: "true"
+      DATABASE_SAVE_IS_ON_WHATSAPP: "true"
+      DATABASE_SAVE_IS_ON_WHATSAPP_DAYS: "7"
+      DATABASE_DELETE_MESSAGE: "false"
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://:${REDIS_PASSWORD:-evoai_redis_pass}@redis:6379/4
+      CACHE_REDIS_PREFIX_KEY: evolution-cache
+      CACHE_REDIS_TTL: "604800"
+      CACHE_REDIS_SAVE_INSTANCES: "true"
+      CACHE_LOCAL_ENABLED: "false"
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+      AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES: "true"
+      QRCODE_LIMIT: "30"
+      QRCODE_COLOR: "#175197"
+      TELEMETRY: "false"
+      TELEMETRY_URL: ""
+      CONFIG_SESSION_PHONE_CLIENT: Evolution
+      CONFIG_SESSION_PHONE_NAME: Chrome
+    depends_on:
+      evolution-api-db-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - evolution_api_instances:/evolution/instances
+
+volumes:
+  evolution_api_instances:

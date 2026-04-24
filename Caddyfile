@@ -1,0 +1,45 @@
+{
+    email muriloa@gmail.com
+}
+
+crm.atendai.pro {
+    reverse_proxy evo-frontend:80
+    request_body {
+        max_size 100MB
+    }
+}
+
+api.atendai.pro {
+    reverse_proxy evo-crm:3000
+    request_body {
+        max_size 100MB
+    }
+}
+
+auth.atendai.pro {
+    reverse_proxy evo-auth:3001
+    request_body {
+        max_size 100MB
+    }
+}
+
+core.atendai.pro {
+    reverse_proxy evo-core:5555
+    request_body {
+        max_size 100MB
+    }
+}
+
+ai.atendai.pro {
+    reverse_proxy evo-processor:8000
+    request_body {
+        max_size 100MB
+    }
+}
+
+wpp.atendai.pro {
+    reverse_proxy evolution-api:8080
+    request_body {
+        max_size 100MB
+    }
+}
