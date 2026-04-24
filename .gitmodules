@@ -15,7 +15,8 @@
 	url = https://github.com/EvolutionAPI/evo-ai-processor-community.git
 [submodule "evo-ai-core-service-community"]
 	path = evo-ai-core-service-community
-	url = https://github.com/EvolutionAPI/evo-ai-core-service-community.git
+	url = https://github.com/muriloorama/evo-ai-core-service-community.git
+	branch = main
 [submodule "evolution-api"]
 	path = evolution-api
 	url = https://github.com/EvolutionAPI/evolution-api.git
