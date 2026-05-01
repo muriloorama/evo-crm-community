@@ -4,6 +4,11 @@ services:
   # ---------------------------------------------------------------------------
   evolution-api-db-init:
     image: postgres:16-alpine
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
     restart: "no"
     depends_on:
       postgres:
@@ -21,6 +26,11 @@ services:
   # ---------------------------------------------------------------------------
   evolution-api:
     image: evoapicloud/evolution-api:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
     restart: unless-stopped
     expose:
       - "8080"
